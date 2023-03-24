@@ -53,7 +53,7 @@ WhoisASN(){
 }
 
 QueryRipestat(){
-	StatusbarMessage "Retrieving BGP data for AS$1 ($found_asname)"
+	#StatusbarMessage "Retrieving BGP data for AS$1 ($found_asname)"
 	# BGP routing stats
 	ripestat_routing_data=$(docurl -m5 -s "https://stat.ripe.net/data/routing-status/data.json?resource=AS$1&sourceapp=nitefood-asn")
 	if [ -n "$ripestat_routing_data" ]; then
@@ -62,7 +62,7 @@ QueryRipestat(){
 		ripestat_bgp=$(jq -r '.data.observed_neighbours' <<<"$ripestat_routing_data")
 	fi
 	# BGP neighbours list
-	StatusbarMessage "Retrieving peering data for AS$1 ($found_asname)"
+	#StatusbarMessage "Retrieving peering data for AS$1 ($found_asname)"
 	ripestat_neighbours_data=$(docurl -m5 -s "https://stat.ripe.net/data/asn-neighbours/data.json?resource=AS$1&sourceapp=nitefood-asn")
 	upstream_peers=$(jq -r '.data.neighbours | sort_by(.power) | reverse[] | select (.type=="left") | .asn' <<<"$ripestat_neighbours_data")
 	downstream_peers=$(jq -r '.data.neighbours | sort_by(.power) | reverse[] | select (.type=="right") | .asn' <<<"$ripestat_neighbours_data")
@@ -162,7 +162,7 @@ QueryRipestat(){
 		uncertain_peers="$resolved_uncertain_peers"
 	fi
 
-	StatusbarMessage "Retrieving prefix allocations and announcements for AS$1 ($found_asname)"
+	#StatusbarMessage "Retrieving prefix allocations and announcements for AS$1 ($found_asname)"
 	ipv4_inetnums=""
 	ipv4_other_inetnums=""
 	ipv6_inetnums=""
@@ -181,7 +181,7 @@ QueryRipestat(){
 	prefixcounter=0
 	for prefix in $ipv6_ripe_prefixes; do
 		((prefixcounter++))
-		StatusbarMessage "Retrieving information for IPv6 prefix $prefixcounter/$ipv6_ripe_prefixes_count"
+		#StatusbarMessage "Retrieving information for IPv6 prefix $prefixcounter/$ipv6_ripe_prefixes_count"
 		# old way (one whois lookup per prefix)
 		# inet6nums=$(whois -h whois.ripe.net -- "-T inet6num -K -L --resource $prefix" | \
 		#				grep -m2 inet6num | cut -d ':' -f 2- | sed 's/^[ \t]*//')
@@ -209,7 +209,7 @@ QueryRipestat(){
 
 	prefixcounter=0
 	for prefix in $ipv4_ripe_prefixes; do
-		StatusbarMessage "Retrieving information for IPv4 prefix $prefixcounter/$ipv4_ripe_prefixes_count"
+		#StatusbarMessage "Retrieving information for IPv4 prefix $prefixcounter/$ipv4_ripe_prefixes_count"
 		((prefixcounter++))
 		# old way (one whois lookup per prefix)
 		# parent_inetnum=$(whois -h whois.ripe.net -- "-T inetnum -K -L --resource  $prefix" | \
@@ -260,7 +260,7 @@ QueryRipestat(){
 		# found a new prefix in pWhois, check if it's announced by a different AS
 		# (e.g. target AS has delegated announcements for this prefix to another AS)
 		((prefixcounter++))
-		StatusbarMessage "Identifying origin AS for additional IPv4 prefix $prefixcounter/$pwhois_unique_prefixes_count"
+		#StatusbarMessage "Identifying origin AS for additional IPv4 prefix $prefixcounter/$pwhois_unique_prefixes_count"
 		LookupASNAndRouteFromIP "$prefix"
 		prefix_originator_asn="$found_asn"
 		if [ -z "$prefix_originator_asn" ] || [ "$prefix_originator_asn" = "$1" ]; then
@@ -318,7 +318,7 @@ QueryRipestat(){
 		json_ipv4_aggregated_inetnums=$(jq -cM --slurp --raw-input 'split("\n") | map(select(length > 0))' <<<"$ipv4_inetnums")
 		json_ipv6_aggregated_inetnums=$(jq -cM --slurp --raw-input 'split("\n") | map(select(length > 0))' <<<"$ipv6_inetnums")
 	fi
-	StatusbarMessage
+	#StatusbarMessage
 }
 
 RIPESuggestASN(){
@@ -327,12 +327,12 @@ RIPESuggestASN(){
 	ripe_suggest_output=""
 	while true; do
 		for input_variation in "${input}" "AS_${input}" "AS-${input}" "${input}_AS" "${input}-AS"; do
-			StatusbarMessage "Retrieving suggested ASNs for ${bluebg}${input_variation}${lightgreybg}"
+			#StatusbarMessage "Retrieving suggested ASNs for ${bluebg}${input_variation}${lightgreybg}"
 			# lookup input variation (AS_<input>, AS-<input>, <input>_AS, <input>-AS)
 			ripe_suggest_output+=$(docurl -s "https://stat.ripe.net/data/searchcomplete/data.json?resource=${input_variation}&sourceapp=nitefood-asn" | \
 									jq -r '.data.categories[] | select ( .category == "ASNs" ) | .suggestions[]')
 		done
-		StatusbarMessage
+		#StatusbarMessage
 		if [ -n "$ripe_suggest_output" ]; then
 			found_suggestions=$(jq -r '.description' <<<"$ripe_suggest_output" | sort -u)
 			for suggestion in $found_suggestions; do
@@ -451,9 +451,9 @@ WhoisIP(){
 	if [ "$UNANNOUNCED_PREFIX" = false ] && [ "$GENERIC_WHOIS_LOOKUP_ONLY" = false ]; then
 		# we skip RPKI lookup in both cases because if SKIP_WHOIS=true then we're being
 		# called from TraceASPath, and RPKI lookup will be performed there subsequently
-		StatusbarMessage "Checking RPKI validity for ${bluebg}AS${found_asn}${lightgreybg} and prefix ${bluebg}${found_route}${lightgreybg}"
+		#StatusbarMessage "Checking RPKI validity for ${bluebg}AS${found_asn}${lightgreybg} and prefix ${bluebg}${found_route}${lightgreybg}"
 		RPKILookup "$found_asn" "$found_route"
-		StatusbarMessage
+		#StatusbarMessage
 		[[ "$JSON_OUTPUT" = false ]] && echo ""
 	elif [ "$IS_BOGON" = false ]; then
 		rpki_output="${red}N/A (address not announced)${default}"
@@ -734,9 +734,9 @@ PrintUsage(){
 }
 
 PwhoisLookup(){
-	StatusbarMessage "Collecting pWhois data"
+	#StatusbarMessage "Collecting pWhois data"
 	pwhois_output=$(whois -h whois.pwhois.org "$1")
-	StatusbarMessage
+	#StatusbarMessage
 	if echo "$pwhois_output" | grep -vq "That IP address doesn't appear"; then
 		# pwhois_asn=$(echo "$pwhois_output" | grep -E "^Origin-AS" | cut -d ':' -f 2 | sed 's/^ //')
 		# pwhois_prefix=$(echo "$pwhois_output" | grep -E "^Prefix" | cut -d ':' -f 2 | sed 's/^ //')
@@ -821,7 +821,7 @@ AbuseLookupForPrefix(){
 }
 
 HopPrint(){
-	StatusbarMessage
+	#StatusbarMessage
 	# shellcheck disable=SC2124
 	output="$@"
 	# create hyperlinks if running in server mode
@@ -839,7 +839,7 @@ HopPrint(){
 		fi
 	fi
 	echo -e "$output"
-	StatusbarMessage "Analyzing collected trace output to ${bluebg}${host_to_trace}${lightgreybg}"
+	#StatusbarMessage "Analyzing collected trace output to ${bluebg}${host_to_trace}${lightgreybg}"
 }
 
 TraceASPath(){
@@ -873,7 +873,7 @@ TraceASPath(){
 		PrintErrorAndExit "Error: cannot trace an IPv6 from this IPv4-only host!"
 	fi
 	echo ""
-	StatusbarMessage "Collecting trace data to ${bluebg}${host_to_trace}${lightgreybg}"
+	#StatusbarMessage "Collecting trace data to ${bluebg}${host_to_trace}${lightgreybg}"
 
 	# start the mtr trace
 	DebugPrint "${yellow}mtr -> $host_to_trace ($MTR_ROUNDS rounds)${default}"
@@ -1121,7 +1121,7 @@ TraceASPath(){
 
 	endtime=$(date +%s)
 	runtime=$((endtime-starttime))
-	StatusbarMessage
+	#StatusbarMessage
 	if [ "$IS_ASN_CHILD" = true ]; then
 		# date and time is already displayed elsewhere in server mode
 		echo -e "\nTrace completed in $runtime seconds.\n"
@@ -1150,7 +1150,7 @@ SearchByOrg(){
 	declare -a orgs
 	echo ""
 	if [ "$ORG_FILTER" = false ]; then
-		StatusbarMessage "Searching for organizations matching ${bluebg}$1${lightgreybg}"
+		#StatusbarMessage "Searching for organizations matching ${bluebg}$1${lightgreybg}"
 		full_org_search_data=$(whois -h whois.pwhois.org "registry org-name=$1")
 		original_organizations=$(echo -e "$full_org_search_data" | grep -E "^Org-Name:" | cut -d ':' -f 2- | sed 's/^ //g' | sort -uf)
 		total_orgsearch_results=$(echo -e "$original_organizations" | wc -l)
@@ -1162,13 +1162,13 @@ SearchByOrg(){
 			organizations="$original_organizations"
 			ORG_FILTER=false
 		else
-			StatusbarMessage "Applying filters"
+			#StatusbarMessage "Applying filters"
 			filtered_org="$original_organizations"
 			# parse all inclusion filters
 			for filter in "${orgfilters_array[@]}"; do
 				apply_filter=$(echo -e "$filtered_org" | grep -i -- "$filter")
 				if [ -z "$apply_filter" ]; then
-					StatusbarMessage
+					#StatusbarMessage
 					echo -en "${yellow}Warning: No results found for ${bluebg}${filter}${default}"
 					sleep 2
 					# remove last filter term
@@ -1181,7 +1181,7 @@ SearchByOrg(){
 			for filter in "${excl_orgfilters_array[@]}"; do
 				apply_filter=$(echo -e "$filtered_org" | grep -i -v -- "$filter")
 				if [ -z "$apply_filter" ]; then
-					StatusbarMessage
+					#StatusbarMessage
 					echo -en "${yellow}Warning: No more results found if excluding ${bluebg}${filter}${default}"
 					sleep 2
 					# remove last filter term
@@ -1201,7 +1201,7 @@ SearchByOrg(){
 	for orgname in $organizations; do
 		orgs+=("$orgname")
 	done
-	StatusbarMessage
+	#StatusbarMessage
 
 	if [ ${#orgs[@]} -eq 0 ]; then
 		# company search yielded no results
@@ -1221,7 +1221,7 @@ SearchByOrg(){
 				searchresults+=$(BoxHeader "IPv${ipversion} networks for organization \"${org}\"")
 				# iterate over Org-IDs related to the company (in case of multiple Org-IDs for a single Org-Name)
 				for orgid in $orgids; do
-					StatusbarMessage "Looking up IPv${ipversion} networks for organization ${bluebg}$org${lightgreybg} (Org-ID: ${bluebg}${orgid}${lightgreybg})"
+					#StatusbarMessage "Looking up IPv${ipversion} networks for organization ${bluebg}$org${lightgreybg} (Org-ID: ${bluebg}${orgid}${lightgreybg})"
 					netblocks_output=""
 					if [ "$ipversion" = "4" ]; then
 						# Parse IPv4 NETBLOCKS
@@ -1283,7 +1283,7 @@ SearchByOrg(){
 			done
 		done
 		NO_ERROR_ON_INTERRUPT=false
-		StatusbarMessage
+		#StatusbarMessage
 		echo -e "$searchresults\n${yellow}────────────────────────────────────────────────────${default}"
 		# let the user choose if they want to run a quick IP lookup
 		while true; do
@@ -1297,12 +1297,12 @@ SearchByOrg(){
 				if [ -n "$input" ]; then
 					# valid IP
 					echo ""
-					StatusbarMessage "Looking up data for ${bluebg}${input}${lightgreybg}"
+					#StatusbarMessage "Looking up data for ${bluebg}${input}${lightgreybg}"
 					LookupASNAndRouteFromIP "$input"
 					(( longest=${#input}+1 ))
 					WhoisIP "$input"
 					PrintReputationAndShodanData "$input"
-					StatusbarMessage
+					#StatusbarMessage
 					continue
 				else
 					continue
@@ -1503,14 +1503,14 @@ ShodanRecon(){
 			LAST_BATCH=true
 		fi
 		urlbatch=$(echo -e "$urllist" | awk "NR==$firsturl,NR==$lasturl")
-		StatusbarMessage "Collecting data for IPs ${bluebg}${firsturl}-${lasturl}${lightgreybg} of ${bluebg}$numtargets${lightgreybg} total ($MAX_CONCURRENT_SHODAN_REQUESTS threads)"
+		#StatusbarMessage "Collecting data for IPs ${bluebg}${firsturl}-${lasturl}${lightgreybg} of ${bluebg}$numtargets${lightgreybg} total ($MAX_CONCURRENT_SHODAN_REQUESTS threads)"
 		DebugPrint "${yellow}curl {$(echo -e "$urlbatch" | tr '\n' ',')}${default}"
 		batchoutput=$( xargs -P "$MAX_CONCURRENT_SHODAN_REQUESTS" -n 1 curl -s < <(echo -e "$urlbatch") )
 		if grep -q "Rate limit exceeded" <<<"$batchoutput"; then
 			# rate limit exceeded during current batch of queries, loop while waiting to continue
 			retryafter=$(docurl -s -i "https://internetdb.shodan.io/127.0.0.1" | awk '/^retry-after:/ {print $2}' | tr -d '\r\n')
 			while [[ ${retryafter} -gt 1 ]]; do
-				StatusbarMessage "Shodan rate limit hit during batch ${bluebg}${firsturl}-${lasturl}${lightgreybg}, resuming in ${redbg}${retryafter}${lightgreybg}s"
+				#StatusbarMessage "Shodan rate limit hit during batch ${bluebg}${firsturl}-${lasturl}${lightgreybg}, resuming in ${redbg}${retryafter}${lightgreybg}s"
 				sleep 1
 				retryafter=$(( retryafter-1 ))
 			done
@@ -1525,7 +1525,7 @@ ShodanRecon(){
 			firsturl=$(( lasturl++ ))
 		fi
 	done
-	StatusbarMessage
+	#StatusbarMessage
 
 	# convert single API output results to array, delete IPs for which Shodan had no data available
 	json=$(jq -cM --slurp 'del (.[] | select(.ip==null))' <<<"$curloutput")
@@ -1540,7 +1540,7 @@ ShodanRecon(){
 	shodan_endtime=$(date +%s)
 	shodan_runtime=$((shodan_endtime-shodan_starttime))
 
-	StatusbarMessage "Parsing collected data"
+	#StatusbarMessage "Parsing collected data"
 	vulnlist=""
 	hostnamelist=""
 	portlist=""
@@ -1649,7 +1649,7 @@ ShodanRecon(){
 
 	done
 
-	StatusbarMessage
+	#StatusbarMessage
 	echo -e "$output"
 
 	final_stats="${default}\n______________________________\n\n"
@@ -1735,7 +1735,7 @@ ShodanRecon(){
 	fi
 	# top N vulnerabilities
 	echo -e "${red}[TOP ${SHODAN_SHOW_TOP_N} Vulnerabilities] \n"
-	StatusbarMessage "Identifying CVE score and severity for vulnerable hosts"
+	#StatusbarMessage "Identifying CVE score and severity for vulnerable hosts"
 	cvestats_text=""
 	if [ -z "$vulnlist" ]; then
 		# no vulns found
@@ -1787,7 +1787,7 @@ ShodanRecon(){
 			cvestats_text+="\n"
 		done
 	fi
-	StatusbarMessage
+	#StatusbarMessage
 	echo -e "$cvestats_text"
 	echo -e "$final_stats"
 }
@@ -1820,7 +1820,7 @@ BulkGeolocate(){
 			LAST_BATCH=true
 		fi
 		ipbatch=$(echo -en "$targetlist" | awk "NR==$firstip,NR==$lastip")
-		StatusbarMessage "Collecting geolocation data for IPs ${bluebg}${firstip}-${lastip}${lightgreybg} of ${bluebg}$target_count${lightgreybg} total"
+		#StatusbarMessage "Collecting geolocation data for IPs ${bluebg}${firstip}-${lastip}${lightgreybg} of ${bluebg}$target_count${lightgreybg} total"
 		ipmap_targets=$(echo -en "$ipbatch" | tr '\n' ',')
 		ipapi_targets=$(jq -c --slurp --raw-input 'split("\n") | map(select(length > 0))' <<<"$ipbatch")
 		ipmap_output=$(docurl -m15 -s "https://ipmap.ripe.net/api/v1/locate/all?resources=$ipmap_targets")
@@ -1896,7 +1896,7 @@ BulkGeolocate(){
 		firstip=$(( lastip++ ))
 	done
 
-	StatusbarMessage
+	#StatusbarMessage
 
 	[[ "$JSON_OUTPUT" = true ]] && return
 
@@ -2151,7 +2151,7 @@ IPGeoRepLookup(){
 	local ipapi_status
 	local ipapi_errmsg
 
-	StatusbarMessage "Collecting geolocation and classification data"
+	#StatusbarMessage "Collecting geolocation and classification data"
 
 	# fetch preferred geolocation and anycast data from RIPE IPmap
 	ipmap_output=$(docurl -m4 -s "https://ipmap.ripe.net/api/v1/locate/$1/best")
@@ -2361,7 +2361,7 @@ IPGeoRepLookup(){
 		fi
 	fi
 
-	StatusbarMessage
+	#StatusbarMessage
 }
 
 IPShodanLookup(){
@@ -2378,7 +2378,7 @@ IPShodanLookup(){
 	shodan_ports_json_output=""
 	shodan_tags_json_output=""
 	shodan_vulns_json_output=""
-	StatusbarMessage "Collecting open ports, CPE and CVE data"
+	#StatusbarMessage "Collecting open ports, CPE and CVE data"
 	shodan_data=$(docurl -m5 -s "https://internetdb.shodan.io/$1" | grep -v "No information available")
 	if [ -n "$shodan_data" ]; then
 		shodan_cpes=$(jq -r '.cpes[]' <<<"$shodan_data" 2>/dev/null)
@@ -2435,7 +2435,7 @@ IPShodanLookup(){
 		fi
 	fi
 
-	StatusbarMessage
+	#StatusbarMessage
 }
 
 PwhoisListPrefixesForOrg(){
@@ -2468,7 +2468,7 @@ AsnServerListener(){
 	fi
 
 	# fetch external IP and ASN to include in the HTML reports
-	StatusbarMessage "Detecting host external IP and ASN"
+	#StatusbarMessage "Detecting host external IP and ASN"
 	WhatIsMyIP
 	LookupASNAndRouteFromIP "$local_wanip"
 	if [ -z "$found_asn" ]; then
@@ -2478,7 +2478,7 @@ AsnServerListener(){
 	server_country=$(echo "${found_asname##*,}" | tr -d ' ')
 	[[ -z "$server_country" ]] && server_country="(Unknown)"
 
-	StatusbarMessage
+	#StatusbarMessage
 
 	if [ "$HAVE_IPV6" = true ]; then
 		[[ "$IS_HEADLESS" = true ]] && ipv6_mark="YES" || ipv6_mark="${green}✓ YES${default}"
@@ -2526,7 +2526,7 @@ AsnServerListener(){
 
 Ctrl_C() {
 	if [ "$NO_ERROR_ON_INTERRUPT" = true ]; then
-		StatusbarMessage
+		#StatusbarMessage
 		tput sgr0
 		ShowMenu
 	else
@@ -2552,7 +2552,7 @@ BoxHeader() { # cheers https://unix.stackexchange.com/a/70616
 	fi
 }
 
-StatusbarMessage() { # invoke without parameters to delete the status bar message
+#StatusbarMessage() { # invoke without parameters to delete the status bar message
 	# suppress output for headless runs
 	[[ "$IS_HEADLESS" = true ]] && return
 
@@ -3700,7 +3700,7 @@ if [ -t 0 ] || [ "$IS_HEADLESS" = true ]; then
 else
 	# script was invoked with input from stdin (e.g. "asn -s < iplist")
 	# read IP list from stdin and trim blanks and comments
-	userinput=$(cat | grep -Ev '^$|^[ \t]*#')
+	userinput="${@: -1}"
 fi
 
 # trim leading whitespace from userinput
